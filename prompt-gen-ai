@@ -1,0 +1,12 @@
+Prompt 1:
+Tôi đang muốn thu thập dữ liệu từ 1 facebook group cụ thể, dữ liệu cần thu thập gồm: posts (postid, authorid), comments (commentid, authorid), và members (memberid, membertype).
+Hãy giúp tôi viết crawler dựa trên Selenium, BeautifulSoup4 thực hiện việc này.  Ngôn ngữ lập trình là python và hệ điều hành macOS.
+
+
+
+Error:
+Kết quả trả về không có lấy được dữ liệu:
+Posts: []
+Comments: []
+Members: []
+Hãy giúp tôi sửa lại đoạn code trên
