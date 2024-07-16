@@ -98,12 +98,13 @@ def get_more_comments(post_id):
     soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
     see_next_id = "see_next_" + post_id
-    more_comments_tag = soup2.find('div', id=see_next_id)
-    more_comments_tag = more_comments_tag.find('a')
+    more_comments_tag = soup2.find('div', id=see_next_id)    
     if more_comments_tag is not None:        
-        link = base_url + more_comments_tag.get('href')[1:]
-        access_link(link)
-        return True
+        more_comments_tag = more_comments_tag.find('a')
+        if more_comments_tag is not None:
+            link = more_comments_tag.get('href')
+            access_link(link)
+            return True
     return False
 
 def get_more_members():
@@ -193,8 +194,9 @@ def scrape_posts_and_comments():
             post_data.append({'postId': post_id, 'author_id': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
 
             # Lấy tất cả bình luận từ 1 bài viết cụ thể
-            post_id = '3827105437612569'
+            #post_id = '3827105437612569' #(for testing only)
             comment_data = scrape_comments(post_id)
+            #break #(for testing only)
 
         post_page_index += 1
         if post_page_index > 1:
@@ -237,7 +239,7 @@ def scrape_comments(post_id):
             if comment_id is None:
                 continue     
             # Kiểm tra nếu không còn comment nào khác
-            if comment_id == ('see_next_' + str(post_id)):
+            if comment_id == ('see_next_' + str(post_id)) or comment_id == ('see_prev_' + str(post_id)):
                 continue
             
             comment_tag = comment.find('a')
@@ -245,13 +247,15 @@ def scrape_comments(post_id):
                 comment_author_name = comment_tag.text
                 if comment_tag.parent is not None:
                     if comment_tag.parent.next_sibling is not None:
-                        comment_content = comment_tag.parent.next_sibling.text
-                #comment_author_id = comment_tag.get('href').split('?')[0][1:]                
-                comment_author_id = comment_tag.get('href').split('?')
-                if comment_author_id[0] != '/profile.php':
-                    comment_author_id = comment_author_id[0][1:]
-                else:
-                    comment_author_id = comment_author_id[1].split('&')[0][3:]
+                        comment_content = comment_tag.parent.next_sibling.text                
+                
+                comment_tag = comment_tag.get('href')
+                if comment_tag is not None:
+                    comment_author_id = comment_tag.split('?')
+                    if comment_author_id[0] != '/profile.php':
+                        comment_author_id = comment_author_id[0][1:]
+                    else:
+                        comment_author_id = comment_author_id[1].split('&')[0][3:]
             reactions_tag = comment.find('a', string="Like")
             if reactions_tag is not None:                    
                 try:
@@ -260,7 +264,7 @@ def scrape_comments(post_id):
                 except Exception as e:
                     comment_reactions = 0
                                                                             
-            print('      ' + post_id, comment_id, comment_author_id)
+            print('      ' + post_id, comment_id, comment_author_id, comment_author_name)
                                                                 
             # Thêm dữ liệu bình luận vào danh sách comment_data
             comment_data.append({'postId': post_id, 'commentId': comment_id, 'authorId': comment_author_id, 'authorName': comment_author_name, 'commentContent': comment_content, 'reactions': comment_reactions})                                        
