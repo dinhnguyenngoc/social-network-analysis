@@ -1,0 +1,25 @@
+Thông tin các loại dữ liệu thu thập từ facebook group
+
+1/ Posts
+- groupCode: identifier of the group
+- postId: identifier of the post
+- authorId: identifier of the author
+- time: creation time
+- isShared: true if the post contains an original object shared on the group, false otherwise
+- (N/A)contentType: the type of content (Video, Link, Album, Post, Photo, Event, Page, Gif, Group, Offer, Memory, Text)
+- (N/A)share: the number of times a content has been shared
+- reactions: the number of reactions (Like, Love, Haha, Wow, Sad, Angry)
+
+2/ (N/A)Members
+- memberId: the identifier of a member
+- memberType: the type of the members (0 = admin & moderator, 1 = other members)
+
+3/ Comments
+- postId: identifier of the post
+- commentId: the identifier of the comment
+- authorId: the identifier of the author creation time
+- (N/A)commentType: indicates if it is a comment to a post (C) or it is a reply to a comment (R)
+- (N/A)targetId: it indicates the identifier of the post (if commentType = C) or the identifier of the comment (if commentType = R)
+- reactions: the number of reactions (Like, Love, Haha, Wow, Sad, Angry)
+
+Ref: https://cri-lab.net/wp-content/uploads/2021/05/predicting-influential-users-full.pdf (page 15)
