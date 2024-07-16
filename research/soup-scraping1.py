@@ -1,3 +1,4 @@
+import sys
 # Thư viện Selenium Automation Testing
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -17,11 +18,15 @@ options.add_argument("--disable-notifications")
 options.add_argument("--disable-infobars")
 options.add_argument("--disable-extensions")
 options.add_argument("start-maximized")
-#options.add_argument("--headless")  # Chạy Chrome ở chế độ headless (không hiển thị giao diện)
+options.add_argument("--headless")  # Chạy Chrome ở chế độ headless (không hiển thị giao diện)
 service = Service('/usr/local/bin/chromedriver')  # Đường dẫn đến chromedriver trên máy
 driver = webdriver.Chrome(service=service, options=options)
 base_url = 'https://mbasic.facebook.com/'
 group_id = 'N/A'
+int_max_size = sys.maxsize
+post_max_page_index = int_max_size
+member_max_page_index = int_max_size
+comment_max_page_index = int_max_size
 
 # Đăng nhập vào Facebook
 def login_facebook(email, password):
@@ -199,7 +204,7 @@ def scrape_posts_and_comments():
             #break #(for testing only)
 
         post_page_index += 1
-        if post_page_index > 1:
+        if post_page_index > post_max_page_index:
             break
         is_more_posts = get_more_posts()
         if is_more_posts == False:
@@ -270,7 +275,7 @@ def scrape_comments(post_id):
             comment_data.append({'postId': post_id, 'commentId': comment_id, 'authorId': comment_author_id, 'authorName': comment_author_name, 'commentContent': comment_content, 'reactions': comment_reactions})                                        
 
         comment_page_index += 1
-        if comment_page_index > 5:
+        if comment_page_index > comment_max_page_index:
             break
         is_more_comments = get_more_comments(post_id)
         if is_more_comments == False:
@@ -317,13 +322,15 @@ def scrape_members(member_type):
             member_data.append({'memberId': member_id, 'memberName': member_name, 'memberType': member_type})
 
         member_page_index += 1
-        if member_page_index > 2:
+        if member_page_index > member_max_page_index:
             break
         is_more_members = get_more_members()
         if is_more_members == False:
             break
 
     return member_data
+
+start_time = time.time()        
 
 # Lấy thông tin đăng nhập
 with open('fb_credentials.txt') as file:
@@ -377,3 +384,6 @@ comments_df = pd.DataFrame(comments)
 posts_df.to_csv('posts.csv', index=False)
 comments_df.to_csv('comments.csv', index=False)
 print('->save data completed')
+
+end_time = time.time()
+print(f'Execution time: {round(end_time - start_time)} seconds')
