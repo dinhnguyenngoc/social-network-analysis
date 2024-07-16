@@ -13,26 +13,26 @@ import pandas as pd
 import time
 
 # Cấu hình Selenium
-options = Options()
-options.add_argument("--disable-notifications")
-options.add_argument("--disable-infobars")
-options.add_argument("--disable-extensions")
-options.add_argument("start-maximized")
-options.add_argument("--headless")  # Chạy Chrome ở chế độ headless (không hiển thị giao diện)
-#service = Service('/usr/local/bin/chromedriver')  # Đường dẫn đến chromedriver trên máy
-driver = webdriver.Chrome(service=service, options=options)
+def init_webdriver():
+    options = Options()
+    options.add_argument("--disable-notifications")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--disable-extensions")
+    options.add_argument("start-maximized")
+    #options.add_argument("--headless")  # Chạy Chrome ở chế độ headless (không hiển thị giao diện)
+    service = Service('/usr/local/bin/chromedriver')  # Đường dẫn đến chromedriver trên máy
+    driver = webdriver.Chrome(service=service, options=options)
+    return driver
+
 base_url = 'https://mbasic.facebook.com/'
 group_id = 'N/A'
 int_max_size = sys.maxsize
-post_max_page_index = 3
-member_max_page_index = 3
-comment_max_page_index = 3
 
 # Đăng nhập vào Facebook
-def login_facebook(email, password):
+def login_facebook(driver, email, password):
     print('open facebook started')
     driver.get(base_url)
-    time.sleep(3)
+    time.sleep(4)
     print('->open facebook completed')
     
     print('login started')
@@ -42,28 +42,28 @@ def login_facebook(email, password):
     email_input.send_keys(email)
     password_input.send_keys(password)
     password_input.send_keys(Keys.RETURN)
-    time.sleep(3)
+    time.sleep(4)
     print('->login completed')
 
 # Truy cập vào nhóm cụ thể
-def access_group(group_url):
+def access_group(driver, group_url):
     driver.get(group_url)
-    time.sleep(3)   
-    return get_group_id() 
+    time.sleep(4)   
+    return get_group_id(driver) 
 
 # Truy cập vào link cụ thể
-def access_link(link_url):
+def access_link(driver, link_url):
     driver.get(link_url)
-    time.sleep(3)
+    time.sleep(4)
 
 # Lấy group id của 1 nhóm cụ thể
-def get_group_id():
+def get_group_id(driver):
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     about_tag = soup.find('a', string="About")
     return about_tag.get('href').split('?')[0][8:]
 
 # Cuộn trang để tải thêm nội dung
-def scroll_page():        
+def scroll_page(driver):        
     
     SCROLL_PAUSE_TIME = 2
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -80,27 +80,17 @@ def scroll_page():
         #if page_index > 6:
         #    break
 
-def get_more_posts():
+def get_more_posts(driver):
     soup = BeautifulSoup(driver.page_source, 'html.parser')
             
     more_posts_tag = soup.find('a', string="See more posts")
     if more_posts_tag is not None:
         link = base_url + more_posts_tag.get('href')[1:]
-        access_link(link)
+        access_link(driver, link)
         return True
     return False
-    
-    # Tìm thẻ <a>See more posts</a> và click vào
-    # try:            
-    #     link = driver.find_element(By.LINK_TEXT, "See more posts")
-    #     link.click()
-    # except Exception as e:
-    #     print("Không thể tìm thấy thẻ <a>See more posts</a> hoặc click vào nó:", e)
 
-    # Đợi một lúc để kiểm tra kết quả
-    # time.sleep(3)
-
-def get_more_comments(post_id):
+def get_more_comments(driver, post_id):
     soup2 = BeautifulSoup(driver.page_source, 'html.parser')
 
     see_next_id = "see_next_" + post_id
@@ -109,22 +99,22 @@ def get_more_comments(post_id):
         more_comments_tag = more_comments_tag.find('a')
         if more_comments_tag is not None:
             link = more_comments_tag.get('href')
-            access_link(link)
+            access_link(driver, link)
             return True
     return False
 
-def get_more_members():
+def get_more_members(driver):
     soup = BeautifulSoup(driver.page_source, 'html.parser')
             
     more_members_tag = soup.find('a', string="See more")
     if more_members_tag is not None:        
         link = base_url + more_members_tag.get('href')[1:]
-        access_link(link)
+        access_link(driver, link)
         return True
     return False
 
 # Thu thập dữ liệu bài viết và bình luận
-def scrape_posts_and_comments(post_max_page_index, comment_max_page_index):
+def scrape_posts_and_comments(driver, group_code, post_max_page_index, comment_max_page_index):
     post_data = []
     comment_data = []
 
@@ -132,7 +122,7 @@ def scrape_posts_and_comments(post_max_page_index, comment_max_page_index):
     while True:
         print(' post page: ' + str(post_page_index))
             
-        scroll_page()
+        scroll_page(driver)
     
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         
@@ -194,37 +184,38 @@ def scrape_posts_and_comments(post_max_page_index, comment_max_page_index):
                 if post_footer_tag.find('a', string="Full Story") is not None:
                     post_id = post_footer_tag.find('a', string="Full Story").get('href').split('/')[6]                
             
-            print('  ', post_id, author_id, author_name)
+            print('  ', group_code, post_id, author_id, author_name)
             
             # Thêm dữ liệu bài viết vào danh sách post_data
-            post_data.append({'postId': post_id, 'author_id': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
+            post_data.append({'groupId': group_code, 'postId': post_id, 'author_id': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
 
             # Lấy tất cả bình luận từ 1 bài viết cụ thể
             #post_id = '3827105437612569' #(for testing only)
-            comment_data = scrape_comments(post_id, comment_max_page_index)
+            comment_data = scrape_comments(driver, group_code, post_id, comment_max_page_index)
             #break #(for testing only)
 
         post_page_index += 1
         if post_page_index > post_max_page_index:
             break
-        is_more_posts = get_more_posts()
+        is_more_posts = get_more_posts(driver)
         if is_more_posts == False:
             break
             
     return post_data, comment_data
 
-def scrape_comments(post_id, comment_max_page_index):
+def scrape_comments(driver, group_code, post_id, comment_max_page_index):
     comment_data = []
     
     # Truy cập vào trang comments của 1 bài viết cụ thể
+    group_based_url = 'https://mbasic.facebook.com/groups/' + group_code + '/'
     driver.get(group_based_url + 'permalink/' + post_id)
-    time.sleep(3)
+    time.sleep(4)
     
     comment_page_index = 1
     while True:
         print('     comment page: ' + str(comment_page_index))
             
-        scroll_page()
+        scroll_page(driver)
     
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
                     
@@ -278,25 +269,25 @@ def scrape_comments(post_id, comment_max_page_index):
         comment_page_index += 1
         if comment_page_index > comment_max_page_index:
             break
-        is_more_comments = get_more_comments(post_id)
+        is_more_comments = get_more_comments(driver, post_id)
         if is_more_comments == False:
             break
         
     return comment_data
 
 # Thu thập dữ liệu thành viên
-def scrape_members(group_id, member_type, member_max_page_index):
+def scrape_members(driver, group_id, member_type, member_max_page_index):
     member_data = []
 
     driver.get(base_url + 'browse/group/members/?id=' + group_id + '&start=0&listType=list_' + member_type)
-    time.sleep(3)
+    time.sleep(5)
     
     print(' ' + member_type)
     member_page_index = 1
     while True:
         print(' page: ' + str(member_page_index))                    
     
-        scroll_page()
+        scroll_page(driver)
         
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         
@@ -325,65 +316,9 @@ def scrape_members(group_id, member_type, member_max_page_index):
         member_page_index += 1
         if member_page_index > member_max_page_index:
             break
-        is_more_members = get_more_members()
+        is_more_members = get_more_members(driver)
         if is_more_members == False:
             break
 
     return member_data
 
-start_time = time.time()        
-
-# Lấy thông tin đăng nhập
-with open('fb_credentials.txt') as file:
-    EMAIL = file.readline().split('"')[1]
-    PASSWORD = file.readline().split('"')[1]
-
-# Mở trang Facebook và đăng nhập
-login_facebook(EMAIL, PASSWORD)
-
-print('craping started')
-
-# Truy cập 1 nhóm cụ thể
-group_based_url = 'https://mbasic.facebook.com/groups/VM.2019/'
-print('group access started: ' + group_based_url)
-group_id = access_group(group_based_url)
-print('->group access completed')
-
-# Lấy group id của 1 nhóm cụ thể
-print(' group id: ' + group_id)
-
-# Thu thập dữ liệu
-print('posts and comments scraping started')
-posts, comments = scrape_posts_and_comments(post_max_page_index, comment_max_page_index)
-print('->posts and comments scraping completed')
-
-# print('members scraping started')
-# admin_members = scrape_members(group_id, 'admin_moderator', member_max_page_index)
-# other_members = scrape_members(group_id, 'nonfriend_nonadmin', member_max_page_index)
-# print('->members scraping completed')
-
-# Đóng trình duyệt
-driver.quit()
-print('=>scraping completed')
-
-# In kết quả (có thể lưu vào file hoặc cơ sở dữ liệu tùy nhu cầu)
-#print("Posts:", posts)
-#print("Comments:", comments)
-#print("Members:", members)
-
-print('save data started')
-# Lưu dữ liệu members vào file CSV
-# members = admin_members
-# members.extend(other_members)
-# members_df = pd.DataFrame(members)
-# members_df.to_csv('members.csv', index=False)
-
-# Lưu dữ liệu posts và comments vào file CSV
-posts_df = pd.DataFrame(posts)
-comments_df = pd.DataFrame(comments)
-posts_df.to_csv('posts.csv', index=False)
-comments_df.to_csv('comments.csv', index=False)
-print('->save data completed')
-
-end_time = time.time()
-print(f'Execution time: {round(end_time - start_time)} seconds')
