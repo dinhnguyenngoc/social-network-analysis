@@ -21,7 +21,7 @@ options.add_argument("start-maximized")
 service = Service('/usr/local/bin/chromedriver')  # Đường dẫn đến chromedriver trên máy
 driver = webdriver.Chrome(service=service, options=options)
 base_url = 'https://mbasic.facebook.com/'
-group_id = -1
+group_id = 'N/A'
 
 # Đăng nhập vào Facebook
 def login_facebook(email, password):
@@ -43,12 +43,12 @@ def login_facebook(email, password):
 # Truy cập vào nhóm cụ thể
 def access_group(group_url):
     driver.get(group_url)
-    time.sleep(5)    
+    time.sleep(3)    
 
 # Truy cập vào link cụ thể
 def access_link(link_url):
     driver.get(link_url)
-    time.sleep(5)
+    time.sleep(3)
 
 # Lấy group id của 1 nhóm cụ thể
 def get_group_id():
@@ -92,12 +92,14 @@ def get_more_posts():
     #     print("Không thể tìm thấy thẻ <a>See more posts</a> hoặc click vào nó:", e)
 
     # Đợi một lúc để kiểm tra kết quả
-    # time.sleep(5)
+    # time.sleep(3)
 
-def get_more_comments():
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-            
-    more_comments_tag = soup.find('a', string="View more comments...")
+def get_more_comments(post_id):
+    soup2 = BeautifulSoup(driver.page_source, 'html.parser')
+
+    see_next_id = "see_next_" + post_id
+    more_comments_tag = soup2.find('div', id=see_next_id)
+    more_comments_tag = more_comments_tag.find('a')
     if more_comments_tag is not None:        
         link = base_url + more_comments_tag.get('href')[1:]
         access_link(link)
@@ -119,9 +121,9 @@ def scrape_posts_and_comments():
     post_data = []
     comment_data = []
 
-    page_index = 1
+    post_page_index = 1
     while True:
-        print(' post page: ' + str(page_index))
+        print(' post page: ' + str(post_page_index))
             
         scroll_page()
     
@@ -190,78 +192,99 @@ def scrape_posts_and_comments():
             # Thêm dữ liệu bài viết vào danh sách post_data
             post_data.append({'postId': post_id, 'author_id': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
 
-            # Truy cập vào trang comments của 1 bài viết cụ thể
-            driver.get(group_based_url + 'permalink/' + post_id)
-            time.sleep(5)
-            
-            comment_page_index = 1
-            while True:
-                print('  comment page: ' + str(comment_page_index))
-                    
-                scroll_page()
-            
-                soup2 = BeautifulSoup(driver.page_source, 'html.parser')
-                            
-                # Tìm thẻ cha chứa tất cả các bình luận            
-                comments = soup2.find('div', {'id': 'add_comment_switcher_placeholder'})
-                comments = comments.next_sibling.next_sibling.next_sibling
-                comments = comments.children
-                                
-                # Duyệt qua từng bình luận
-                for comment in comments:
-                    comment_id = 'N/A'
-                    comment_author_id = 'N/A'
-                    comment_author_name = 'N/A'
-                    comment_content = 'N/A'
-                    comment_reactions = 'N/A'
-                    comment_id = comment.get('id')
-                    comment_author_name = comment.find('a').text
-                    if comment.find('a').parent is not None:
-                        if comment.find('a').parent.next_sibling is not None:
-                            comment_content = comment.find('a').parent.next_sibling.text
-                    comment_author_id = comment.find('a').get('href').split('?')[0][1:]                
-                    reactions_tag = comment.find('a', string="Like")
-                    if reactions_tag is not None:                    
-                        try:
-                            reactions_tag = reactions_tag.previous_sibling.previous_sibling
-                            comment_reactions = reactions_tag.text
-                        except Exception as e:
-                            comment_reactions = 0
-                                                            
-                    if comment_id == ('see_next_' + str(post_id)):
-                        continue
-                    
-                    print('   ' + post_id, comment_id, comment_author_id)
-                                                                        
-                    # Thêm dữ liệu bình luận vào danh sách comment_data
-                    comment_data.append({'postId': post_id, 'commentId': comment_id, 'authorId': comment_author_id, 'authorName': comment_author_name, 'commentContent': comment_content, 'reactions': comment_reactions})                                        
+            # Lấy tất cả bình luận từ 1 bài viết cụ thể
+            post_id = '3827105437612569'
+            comment_data = scrape_comments(post_id)
 
-                comment_page_index += 1
-                if comment_page_index > 2:
-                    break
-                is_more_comment = get_more_comments()
-                if is_more_comment == False:
-                    break
-
-        page_index += 1
-        if page_index > 2:
+        post_page_index += 1
+        if post_page_index > 1:
             break
-        is_more_post = get_more_posts()
-        if is_more_post == False:
+        is_more_posts = get_more_posts()
+        if is_more_posts == False:
             break
             
     return post_data, comment_data
+
+def scrape_comments(post_id):
+    comment_data = []
+    
+    # Truy cập vào trang comments của 1 bài viết cụ thể
+    driver.get(group_based_url + 'permalink/' + post_id)
+    time.sleep(3)
+    
+    comment_page_index = 1
+    while True:
+        print('     comment page: ' + str(comment_page_index))
+            
+        scroll_page()
+    
+        soup2 = BeautifulSoup(driver.page_source, 'html.parser')
+                    
+        # Tìm thẻ cha chứa tất cả các bình luận            
+        comments = soup2.find('div', {'id': 'add_comment_switcher_placeholder'})
+        comments = comments.next_sibling.next_sibling.next_sibling
+        comments = comments.children
+                        
+        # Duyệt qua từng bình luận
+        for comment in comments:
+            comment_id = 'N/A'
+            comment_author_id = 'N/A'
+            comment_author_name = 'N/A'
+            comment_content = 'N/A'
+            comment_reactions = 'N/A'
+            comment_id = comment.get('id')
+            # Kiểm tra nếu bài viết không có comment
+            if comment_id is None:
+                continue     
+            # Kiểm tra nếu không còn comment nào khác
+            if comment_id == ('see_next_' + str(post_id)):
+                continue
+            
+            comment_tag = comment.find('a')
+            if comment_tag is not None:
+                comment_author_name = comment_tag.text
+                if comment_tag.parent is not None:
+                    if comment_tag.parent.next_sibling is not None:
+                        comment_content = comment_tag.parent.next_sibling.text
+                #comment_author_id = comment_tag.get('href').split('?')[0][1:]                
+                comment_author_id = comment_tag.get('href').split('?')
+                if comment_author_id[0] != '/profile.php':
+                    comment_author_id = comment_author_id[0][1:]
+                else:
+                    comment_author_id = comment_author_id[1].split('&')[0][3:]
+            reactions_tag = comment.find('a', string="Like")
+            if reactions_tag is not None:                    
+                try:
+                    reactions_tag = reactions_tag.previous_sibling.previous_sibling
+                    comment_reactions = reactions_tag.text
+                except Exception as e:
+                    comment_reactions = 0
+                                                                            
+            print('      ' + post_id, comment_id, comment_author_id)
+                                                                
+            # Thêm dữ liệu bình luận vào danh sách comment_data
+            comment_data.append({'postId': post_id, 'commentId': comment_id, 'authorId': comment_author_id, 'authorName': comment_author_name, 'commentContent': comment_content, 'reactions': comment_reactions})                                        
+
+        comment_page_index += 1
+        if comment_page_index > 5:
+            break
+        is_more_comments = get_more_comments(post_id)
+        if is_more_comments == False:
+            break
+        
+    return comment_data
 
 # Thu thập dữ liệu thành viên
 def scrape_members(member_type):
     member_data = []
 
     driver.get(base_url + 'browse/group/members/?id=' + group_id + '&start=0&listType=list_' + member_type)
-    time.sleep(5)
+    time.sleep(3)
     
-    page_index = 1
+    print(' ' + member_type)
+    member_page_index = 1
     while True:
-        print(' page: ' + str(page_index))                    
+        print(' page: ' + str(member_page_index))                    
     
         scroll_page()
         
@@ -289,11 +312,11 @@ def scrape_members(member_type):
             # memberType: the type of the members (0 = admins & moderators, 1 = members with things in common, 2 = members who contribute to the group, 3 = member recently joined
             member_data.append({'memberId': member_id, 'memberName': member_name, 'memberType': member_type})
 
-        page_index += 1
-        if page_index > 2:
+        member_page_index += 1
+        if member_page_index > 2:
             break
-        is_more = get_more_members()
-        if is_more == False:
+        is_more_members = get_more_members()
+        if is_more_members == False:
             break
 
     return member_data
@@ -323,10 +346,10 @@ print('posts and comments scraping started')
 posts, comments = scrape_posts_and_comments()
 print('->posts and comments scraping completed')
 
-#print('members scraping started')
-#admin_members = scrape_members('admin_moderator')
-#other_members = scrape_members('nonfriend_nonadmin')
-#print('->members scraping completed')
+# print('members scraping started')
+# admin_members = scrape_members('admin_moderator')
+# other_members = scrape_members('nonfriend_nonadmin')
+# print('->members scraping completed')
 
 # Đóng trình duyệt
 driver.quit()
@@ -339,10 +362,10 @@ print('=>scraping completed')
 
 print('save data started')
 # Lưu dữ liệu members vào file CSV
-#members = admin_members
-#members.extend(other_members)
-#members_df = pd.DataFrame(members)
-#members_df.to_csv('members.csv', index=False)
+# members = admin_members
+# members.extend(other_members)
+# members_df = pd.DataFrame(members)
+# members_df.to_csv('members.csv', index=False)
 
 # Lưu dữ liệu posts và comments vào file CSV
 posts_df = pd.DataFrame(posts)
