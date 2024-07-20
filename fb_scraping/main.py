@@ -20,7 +20,7 @@ from fb_scraping import scrape_members
 
 base_url = 'https://mbasic.facebook.com/'
 int_max_size = sys.maxsize
-post_max_page_index = 1
+post_max_page_index = 10
 comment_max_page_index = 1
 member_max_page_index = 1
 

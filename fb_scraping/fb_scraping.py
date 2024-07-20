@@ -187,7 +187,7 @@ def scrape_posts_and_comments(driver, group_code, post_max_page_index, comment_m
             print('  ', group_code, post_id, author_id, author_name)
             
             # Thêm dữ liệu bài viết vào danh sách post_data
-            post_data.append({'groupId': group_code, 'postId': post_id, 'author_id': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
+            post_data.append({'groupId': group_code, 'postId': post_id, 'authorId': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
 
             # Lấy tất cả bình luận từ 1 bài viết cụ thể
             #post_id = '3827105437612569' #(for testing only)

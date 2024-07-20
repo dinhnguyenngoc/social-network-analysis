@@ -18,13 +18,13 @@ options.add_argument("--disable-notifications")
 options.add_argument("--disable-infobars")
 options.add_argument("--disable-extensions")
 options.add_argument("start-maximized")
-options.add_argument("--headless")  # Chạy Chrome ở chế độ headless (không hiển thị giao diện)
-#service = Service('/usr/local/bin/chromedriver')  # Đường dẫn đến chromedriver trên máy
+#options.add_argument("--headless")  # Chạy Chrome ở chế độ headless (không hiển thị giao diện)
+service = Service('/usr/local/bin/chromedriver')  # Đường dẫn đến chromedriver trên máy
 driver = webdriver.Chrome(service=service, options=options)
 base_url = 'https://mbasic.facebook.com/'
 group_id = 'N/A'
 int_max_size = sys.maxsize
-post_max_page_index = 3
+post_max_page_index = 10
 member_max_page_index = 3
 comment_max_page_index = 3
 
@@ -197,7 +197,7 @@ def scrape_posts_and_comments(post_max_page_index, comment_max_page_index):
             print('  ', post_id, author_id, author_name)
             
             # Thêm dữ liệu bài viết vào danh sách post_data
-            post_data.append({'postId': post_id, 'author_id': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
+            post_data.append({'postId': post_id, 'authorId': author_id, 'authorName': author_name, 'time': time_creation, 'isShared': is_shared, 'postContent': post_content, 'reactions': reactions})
 
             # Lấy tất cả bình luận từ 1 bài viết cụ thể
             #post_id = '3827105437612569' #(for testing only)
