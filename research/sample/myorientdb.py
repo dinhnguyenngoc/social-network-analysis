@@ -12,12 +12,12 @@ else:
     print(f"Database {db_name} does not exist.")
     exit()
 
-# Define a class if not already defined
-try:
-    client.command("CREATE CLASS Person EXTENDS V")
-except pyorientdb.exceptions.PyOrientCommandException:
-    # Class already exists
-    pass
+# # Define a class if not already defined
+# try:
+#     client.command("CREATE CLASS Person EXTENDS V")
+# except pyorientdb.exceptions.PyOrientCommandException:
+#     # Class already exists
+#     pass
 
 # Insert a record into the Person class
 command = "INSERT INTO Person (name, age) VALUES ('John Doe', 30)"
