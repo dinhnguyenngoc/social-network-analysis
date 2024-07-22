@@ -1,4 +1,4 @@
-#Tìm hiểu đặt tính của OrientDB, cách thức cài đặt và kết nối
+# Tìm hiểu đặt tính của OrientDB, cách thức cài đặt và kết nối
 Dũng, Nghĩa
 
 
