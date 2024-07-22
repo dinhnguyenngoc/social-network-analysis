@@ -1,3 +1,8 @@
+#Tìm hiểu đặt tính của OrientDB, cách thức cài đặt và kết nối
+Dũng, Nghĩa
+
+
+
 Run docker image
 
 ```docker run -d --name orientdb -p 2424:2424 -p 2480:2480 -e ORIENTDB_ROOT_PASSWORD=root orientdb:latest```
