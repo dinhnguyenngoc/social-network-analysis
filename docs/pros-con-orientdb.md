@@ -26,4 +26,5 @@ CREATE PROPERTY Project.endDate DATE
 
 INSERT INTO Project SET name = 'Project A', description = 'Description of Project A', startDate = '2024-07-01', endDate = '2024-12-31'
 ```
-- SQL-like Syntax: Cú pháp tương tự SQL, sẽ có một số từ khóa đặc thù như LINK LINKSET LINKLIST LINKMAP.
+
+- SQL-like Syntax: Cú pháp tương tự SQL, sẽ có một số từ khóa đặc thù như LINK LINKSET LINKLIST LINKMAP/ VERTEX EDGE
