@@ -10,3 +10,10 @@ Data storage:
 
 - Documents:
 - Graphs:
+
+
+## Các tính năng chính của OrientDB
+- Relationship Focus: Nhiều user chuyển từ MongoDB sang vì hỗ trợ LINK relationship. LINK, LINKSET, LINKLIST, LINKMAP. More: https://orientdb.com/docs/2.2.x/Tutorial-Relationships.html
+- Graph Traversal: Hỗ trợ tốt duyệt qua các dữ liệu có kết nối (e.g., finding recommendations, computing shortest paths, or detecting patterns).
+- Flexibility: Multi-model.
+- SQL-like Syntax: Cú pháp tương tự SQL, sẽ có một số từ khóa đặc thù như LINK LINKSET LINKLIST LINKMAP.
